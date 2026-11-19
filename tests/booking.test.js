@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {localDate,validDate,availableTimes,initializeTimes,updateTimes,validateReservation,validateContact,submitBooking} from '../src/lib/booking.js';
+const now=new Date(2026,10,19,16,0);const sample={date:'2026-11-20',time:'18:00',guests:'2',occasion:'Birthday',name:'Li',email:'li@example.com',phone:''};
+test('local calendar date and leap date validation',()=>{assert.equal(localDate(now),'2026-11-19');assert.equal(validDate('2026-02-30'),false);assert.equal(validDate('2028-02-29'),true);});
+test('past dates and past times are unavailable',()=>{assert.deepEqual(availableTimes('2026-11-18',now),[]);assert.ok(!availableTimes('2026-11-19',new Date(2026,10,19,19,0)).includes('18:00'));});
+test('initializeTimes and updateTimes provide date-based availability',()=>{assert.ok(initializeTimes(now).includes('19:00'));assert.ok(!updateTimes([], {type:'dateChanged',date:'2026-11-20',now}).includes('19:00'));});
+test('valid reservation passes',()=>assert.deepEqual(validateReservation(sample,now),{}));
+test('invalid time, date, guest count and occasion are rejected',()=>{const bad=validateReservation({...sample,date:'2026-11-18',guests:'9',occasion:'Invalid'},now);assert.deepEqual(Object.keys(bad).sort(),['date','guests','occasion','time']);});
+test('valid short names and optional phone are accepted',()=>assert.deepEqual(validateContact(sample),{}));
+test('invalid contact information is rejected',()=>{assert.deepEqual(Object.keys(validateContact({...sample,name:' ',email:'invalid',phone:'abc'})).sort(),['email','name','phone']);});
+test('submit returns a demo reference and preserves booking details',async()=>{const result=await submitBooking(sample,now);assert.match(result.reference,/^LL-/);assert.equal(result.time,sample.time);});
+test('submit rejects invalid booking',async()=>await assert.rejects(()=>submitBooking({...sample,time:''},now),/review/i));

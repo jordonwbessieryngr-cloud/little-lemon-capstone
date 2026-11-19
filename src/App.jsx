@@ -1,0 +1,7 @@
+import {useEffect,useState} from 'react';
+import {Header,Footer} from './components/Layout.jsx';
+import Home,{Specials,About} from './pages/Home.jsx';
+import Booking from './pages/Booking.jsx';
+import Confirmed from './pages/Confirmed.jsx';
+const readRoute=()=>window.location.hash.slice(1)||'/';
+export default function App(){const [route,setRoute]=useState(readRoute);const [booking,setBooking]=useState(null);useEffect(()=>{const onChange=()=>{setRoute(readRoute());window.scrollTo(0,0);};window.addEventListener('hashchange',onChange);return()=>window.removeEventListener('hashchange',onChange);},[]);useEffect(()=>{document.title=`Little Lemon | ${route==='/booking'?'Reserve a table':route==='/confirmed'?'Booking confirmed':'Chicago'}`;},[route]);const confirm=data=>{setBooking(data);window.location.hash='/confirmed';};return <><a className="skip-link" href="#main" onClick={e=>{e.preventDefault();document.getElementById('main')?.focus();}}>Skip to content</a><Header route={route}/><main id="main" tabIndex={-1}>{route==='/booking'?<Booking onConfirm={confirm}/>:route==='/confirmed'?(booking?<Confirmed booking={booking}/>:<section className="container section"><h1>No active reservation</h1><a className="button" href="#/booking">Reserve a table</a></section>):route==='/menu'?<><div className="container section"><h1>Our menu</h1></div><Specials/></>:route==='/about'?<><div className="container section"><h1>About Little Lemon</h1></div><About/></>:<Home/>}</main><Footer/></>;}
